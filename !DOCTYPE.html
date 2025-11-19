@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BP Log</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #000000;
+      --card: #1c1c1e;
+      --card-alt: #2c2c2e;
+      --accent: #0a84ff;
+      --accent-soft: rgba(10, 132, 255, 0.15);
+      --text: #ffffff;
+      --text-muted: #a1a1a6;
+      --danger: #ff453a;
+      --success: #30d158;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px 16px 32px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding: 4px 4px 8px;
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background-color: var(--card);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .card {
+      background-color: var(--card);
+      border-radius: var(--radius-lg);
+      padding: 14px 14px 10px;
+      margin-bottom: 12px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    h2 {
+      font-size: 17px;
+      margin: 0 0 10px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .section-header small {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .field-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid #333;
+      background-color: var(--card-alt);
+      color: var(--text);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+
+    textarea {
+      min-height: 60px;
+      resize: vertical;
+    }
+
+    .switch-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: var(--radius-md);
+      background-color: var(--card-alt);
+      margin-bottom: 8px;
+    }
+
+    .switch-row span {
+      font-size: 15px;
+    }
+
+    .switch {
+      position: relative;
+      width: 44px;
+      height: 26px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #3a3a3c;
+      transition: .2s;
+      border-radius: 999px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+
+    .switch input:checked + .slider {
+      background-color: var(--accent);
+    }
+
+    .switch input:checked + .slider:before {
+      transform: translateX(18px);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    button {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      -webkit-appearance: none;
+    }
+
+    .btn-primary {
+      background-color: var(--accent);
+      color: #ffffff;
+      flex: 1;
+    }
+
+    .btn-secondary {
+      background-color: var(--card-alt);
+      color: var(--text);
+      flex: 1;
+    }
+
+    .btn-icon {
+      font-size: 17px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .chip-ok {
+      background-color: rgba(48, 209, 88, 0.16);
+      color: var(--success);
+    }
+
+    .chip-high {
+      background-color: rgba(255, 69, 58, 0.16);
+      color: var(--danger);
+    }
+
+    .chip-info {
+      background-color: rgba(10, 132, 255, 0.16);
+      color: var(--accent);
+    }
+
+    .entries-list {
+      max-height: 300px;
+      overflow-y: auto;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .entry {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .entry:last-child {
+      border-bottom: none;
+    }
+
+    .entry-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 15px;
+    }
+
+    .entry-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .entry-notes {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      font-style: italic;
+    }
+
+    .timestamp {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .export-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .export-row .field-row {
+      gap: 6px;
+    }
+
+    .export-row input[type="date"] {
+      font-size: 13px;
+      padding: 8px 10px;
+    }
+
+    .footnote {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .empty-state {
+      font-size: 13px;
+      color: var(--text-muted);
+      padding: 4px 0 2px;
+    }
+
+    @media (max-width: 400px) {
+      .title {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <div class="title">BP Log</div>
+        <div class="subtitle">Daily blood pressure tracker</div>
+      </div>
+      <div class="pill" id="summaryChip">No entries yet</div>
+    </header>
+
+    <!-- New Reading Card -->
+    <div class="card">
+      <div class="section-header">
+        <h2>New reading</h2>
+        <small id="nowLabel"></small>
+      </div>
+
+      <div style="margin-bottom: 8px;">
+        <label for="timestamp">Date &amp; time</label>
+        <input type="datetime-local" id="timestamp" />
+      </div>
+
+      <div class="field-row" style="margin-bottom: 8px;">
+        <div style="flex:1;">
+          <label for="sys">Systolic (top)</label>
+          <input type="number" id="sys" inputmode="numeric" placeholder="e.g. 120" />
+        </div>
+        <div style="flex:1;">
+          <label for="dia">Diastolic (bottom)</label>
+          <input type="number" id="dia" inputmode="numeric" placeholder="e.g. 80" />
+        </div>
+        <div style="flex:1;">
+          <label for="pulse">Pulse</label>
+          <input type="number" id="pulse" inputmode="numeric" placeholder="e.g. 70" />
+        </div>
+      </div>
+
+      <div class="field-row" style="margin-bottom: 8px;">
+        <div style="flex:1;">
+          <label for="arm">Arm</label>
+          <select id="arm">
+            <option value="right">Right</option>
+            <option value="left">Left</option>
+          </select>
+        </div>
+        <div style="flex:1;">
+          <label for="position">Position</label>
+          <select id="position">
+            <option value="sitting">Sitting</option>
+            <option value="standing">Standing</option>
+            <option value="lying">Lying</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row" style="margin-bottom: 8px;">
+        <div style="flex:1;">
+          <label>Total sleep (hours)</label>
+          <div class="field-row">
+            <input type="number" id="sleepHours" inputmode="numeric" placeholder="hrs" />
+            <input type="number" id="sleepMinutes" inputmode="numeric" placeholder="min" />
+          </div>
+        </div>
+        <div style="flex:1;">
+          <label for="weight">Weight (optional)</label>
+          <input type="number" id="weight" inputmode="decimal" placeholder="lbs / kg" />
+        </div>
+      </div>
+
+      <div class="switch-row">
+        <span>Fasting</span>
+        <label class="switch">
+          <input type="checkbox" id="fasting" />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="switch-row">
+        <span>Medication taken</span>
+        <label class="switch">
+          <input type="checkbox" id="meds" />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div style="margin-top: 8px;">
+        <label for="notes">Notes (food, symptoms, etc.)</label>
+        <textarea id="notes" placeholder="e.g. coffee before reading, salty meal, stress, run, etc."></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-secondary" type="button" id="clearFormBtn">
+          <span class="btn-icon">↺</span> Clear
+        </button>
+        <button class="btn-primary" type="button" id="saveBtn">
+          <span class="btn-icon">＋</span> Save reading
+        </button>
+      </div>
+    </div>
+
+    <!-- Recent Entries Card -->
+    <div class="card">
+      <div class="section-header">
+        <h2>Recent readings</h2>
+        <small id="countLabel">0 saved</small>
+      </div>
+      <ul class="entries-list" id="entriesList"></ul>
+      <div class="empty-state" id="emptyState">No readings yet. Your future self is waiting 📈</div>
+    </div>
+
+    <!-- Export Card -->
+    <div class="card">
+      <div class="section-header">
+        <h2>Export CSV</h2>
+        <small>For AI or spreadsheets</small>
+      </div>
+
+      <div class="export-row">
+        <div>
+          <label>Optional date range</label>
+          <div class="field-row">
+            <input type="date" id="fromDate" />
+            <input type="date" id="toDate" />
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-primary" type="button" id="exportBtn">
+            <span class="btn-icon">⤓</span> Export CSV
+          </button>
+        </div>
+
+        <div class="footnote">
+          CSV will be downloaded on your device.  
+          You can share it with your AI tool, email it, or open it in Excel/Sheets.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "bpReadings_v1";
+
+    function loadReadings() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        console.error("Failed to parse readings", e);
+        return [];
+      }
+    }
+
+    function saveReadings(readings) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(readings));
+    }
+
+    function formatDateTime(dt) {
+      const d = new Date(dt);
+      if (isNaN(d.getTime())) return "";
+      const opts = { month: "short", day: "numeric" };
+      const datePart = d.toLocaleDateString(undefined, opts);
+      const timePart = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+      return datePart + " · " + timePart;
+    }
+
+    function classifyBP(sys, dia) {
+      if (!sys || !dia) return { label: "Incomplete", class: "chip-info" };
+      if (sys < 120 && dia < 80) {
+        return { label: "Normal", class: "chip-ok" };
+      } else if (sys < 130 && dia < 80) {
+        return { label: "Elevated", class: "chip-info" };
+      } else if (sys < 140 || (dia >= 80 && dia < 90)) {
+        return { label: "High (Stage 1)", class: "chip-high" };
+      } else if (sys >= 140 || dia >= 90) {
+        return { label: "High (Stage 2)", class: "chip-high" };
+      } else {
+        return { label: "Check", class: "chip-info" };
+      }
+    }
+
+    function updateSummaryChip(readings) {
+      const chip = document.getElementById("summaryChip");
+      if (!readings.length) {
+        chip.textContent = "No entries yet";
+        return;
+      }
+      const latest = readings[readings.length - 1];
+      const labelObj = classifyBP(latest.sys, latest.dia);
+      chip.innerHTML = "";
+      const span = document.createElement("span");
+      span.className = "chip " + labelObj.class;
+      span.textContent = `Last: ${latest.sys}/${latest.dia} (${labelObj.label})`;
+      chip.appendChild(span);
+    }
+
+    function renderReadings(readings) {
+      const list = document.getElementById("entriesList");
+      const empty = document.getElementById("emptyState");
+      const countLabel = document.getElementById("countLabel");
+
+      list.innerHTML = "";
+      countLabel.textContent = readings.length + (readings.length === 1 ? " saved" : " saved");
+
+      if (!readings.length) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      const recent = readings.slice().reverse().slice(0, 20);
+
+      recent.forEach(r => {
+        const li = document.createElement("li");
+        li.className = "entry";
+
+        const main = document.createElement("div");
+        main.className = "entry-main";
+
+        const left = document.createElement("div");
+        left.textContent = `${r.sys}/${r.dia} · ${r.pulse || "–"} bpm`;
+
+        const right = document.createElement("div");
+        const cls = classifyBP(r.sys, r.dia);
+        const chip = document.createElement("span");
+        chip.className = "chip " + cls.class;
+        chip.textContent = cls.label;
+        right.appendChild(chip);
+
+        main.appendChild(left);
+        main.appendChild(right);
+
+        const sub = document.createElement("div");
+        sub.className = "entry-sub";
+        const parts = [];
+        parts.push(formatDateTime(r.timestamp));
+        parts.push(r.fasting ? "Fasting" : "Not fasting");
+        parts.push((r.sleepHours || 0) + "h " + (r.sleepMinutes || 0) + "m sleep");
+        parts.push((r.arm || "arm").charAt(0).toUpperCase() + (r.arm || "arm").slice(1) + " arm");
+        if (r.position) {
+          parts.push(r.position.charAt(0).toUpperCase() + r.position.slice(1));
+        }
+        if (r.meds) parts.push("Meds taken");
+        if (r.weight) parts.push("Wt: " + r.weight);
+
+        sub.textContent = parts.join(" • ");
+
+        li.appendChild(main);
+        li.appendChild(sub);
+
+        if (r.notes) {
+          const notes = document.createElement("div");
+          notes.className = "entry-notes";
+          notes.textContent = "“" + r.notes + "”";
+          li.appendChild(notes);
+        }
+
+        list.appendChild(li);
+      });
+    }
+
+    function getFormData() {
+      const timestamp = document.getElementById("timestamp").value;
+      const sys = parseInt(document.getElementById("sys").value, 10);
+      const dia = parseInt(document.getElementById("dia").value, 10);
+      const pulse = parseInt(document.getElementById("pulse").value, 10);
+      const arm = document.getElementById("arm").value;
+      const position = document.getElementById("position").value;
+      const sleepHours = parseInt(document.getElementById("sleepHours").value, 10) || 0;
+      const sleepMinutes = parseInt(document.getElementById("sleepMinutes").value, 10) || 0;
+      const weight = document.getElementById("weight").value;
+      const fasting = document.getElementById("fasting").checked;
+      const meds = document.getElementById("meds").checked;
+      const notes = document.getElementById("notes").value.trim();
+
+      return {
+        timestamp,
+        sys,
+        dia,
+        pulse: isNaN(pulse) ? null : pulse,
+        arm,
+        position,
+        sleepHours,
+        sleepMinutes,
+        weight: weight === "" ? null : weight,
+        fasting,
+        meds,
+        notes
+      };
+    }
+
+    function validateReading(r) {
+      if (!r.timestamp) {
+        alert("Please select date & time.");
+        return false;
+      }
+      if (!r.sys || !r.dia) {
+        alert("Please enter both systolic and diastolic values.");
+        return false;
+      }
+      return true;
+    }
+
+    function clearForm() {
+      const now = new Date();
+      const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 16);
+      document.getElementById("timestamp").value = local;
+      document.getElementById("sys").value = "";
+      document.getElementById("dia").value = "";
+      document.getElementById("pulse").value = "";
+      document.getElementById("sleepHours").value = "";
+      document.getElementById("sleepMinutes").value = "";
+      document.getElementById("weight").value = "";
+      document.getElementById("fasting").checked = false;
+      document.getElementById("meds").checked = false;
+      document.getElementById("notes").value = "";
+    }
+
+    function readingsToCSV(readings) {
+      const header = [
+        "timestamp",
+        "systolic",
+        "diastolic",
+        "pulse",
+        "fasting",
+        "sleep_hours",
+        "sleep_minutes",
+        "arm",
+        "position",
+        "meds_taken",
+        "weight",
+        "notes"
+      ];
+
+      const rows = readings.map(r => {
+        const values = [
+          r.timestamp,
+          r.sys,
+          r.dia,
+          r.pulse ?? "",
+          r.fasting ? "yes" : "no",
+          r.sleepHours ?? "",
+          r.sleepMinutes ?? "",
+          r.arm ?? "",
+          r.position ?? "",
+          r.meds ? "yes" : "no",
+          r.weight ?? "",
+          (r.notes || "").replace(/"/g, '""')
+        ];
+        // wrap notes in quotes to preserve commas
+        values[values.length - 1] = `"${values[values.length - 1]}"`;
+        return values.join(",");
+      });
+
+      return header.join(",") + "\n" + rows.join("\n");
+    }
+
+    function downloadCSV(filename, csvText) {
+      const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function filterByDateRange(readings, from, to) {
+      if (!from && !to) return readings;
+      const fromTime = from ? new Date(from).setHours(0, 0, 0, 0) : null;
+      const toTime = to ? new Date(to).setHours(23, 59, 59, 999) : null;
+
+      return readings.filter(r => {
+        const t = new Date(r.timestamp).getTime();
+        if (isNaN(t)) return false;
+        if (fromTime && t < fromTime) return false;
+        if (toTime && t > toTime) return false;
+        return true;
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const now = new Date();
+      const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 16);
+      document.getElementById("timestamp").value = local;
+
+      const nowLabel = document.getElementById("nowLabel");
+      nowLabel.textContent = "Today · " + now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+
+      const readings = loadReadings();
+      renderReadings(readings);
+      updateSummaryChip(readings);
+
+      document.getElementById("saveBtn").addEventListener("click", () => {
+        const r = getFormData();
+        if (!validateReading(r)) return;
+
+        const all = loadReadings();
+        all.push(r);
+        saveReadings(all);
+        renderReadings(all);
+        updateSummaryChip(all);
+        clearForm();
+      });
+
+      document.getElementById("clearFormBtn").addEventListener("click", clearForm);
+
+      document.getElementById("exportBtn").addEventListener("click", () => {
+        const all = loadReadings();
+        if (!all.length) {
+          alert("No readings to export yet.");
+          return;
+        }
+
+        const from = document.getElementById("fromDate").value;
+        const to = document.getElementById("toDate").value;
+        const filtered = filterByDateRange(all, from, to);
+
+        if (!filtered.length) {
+          alert("No readings found in that date range.");
+          return;
+        }
+
+        const csv = readingsToCSV(filtered);
+        const filename = `bp_readings_${from || "start"}_${to || "end"}.csv`;
+        downloadCSV(filename, csv);
+      });
+    });
+  </script>
+</body>
+</html>
