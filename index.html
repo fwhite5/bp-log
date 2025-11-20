@@ -6,6 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <!-- Simple emoji-based iOS icon -->
+  <link rel="apple-touch-icon"
+        href="data:image/svg+xml;utf8,
+        <svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'>
+          <rect width='100%' height='100%' rx='36' ry='36' fill='%23000000'/>
+          <text x='50%' y='55%' text-anchor='middle' font-size='88' fill='white'>❤</text>
+        </svg>">
 
   <style>
     :root {
@@ -19,6 +26,7 @@
       --text-muted: #a1a1a6;
       --danger: #ff453a;
       --success: #30d158;
+      --warning: #ffd60a;
       --radius-lg: 18px;
       --radius-md: 12px;
     }
@@ -248,6 +256,11 @@
       color: var(--accent);
     }
 
+    .chip-warning {
+      background-color: rgba(255, 214, 10, 0.16);
+      color: var(--warning);
+    }
+
     .entries-list {
       max-height: 300px;
       overflow-y: auto;
@@ -257,12 +270,13 @@
     }
 
     .entry {
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 10px;
+      border-radius: 12px;
+      margin-bottom: 6px;
     }
 
     .entry:last-child {
-      border-bottom: none;
+      margin-bottom: 0;
     }
 
     .entry-main {
@@ -283,6 +297,22 @@
       color: var(--text-muted);
       margin-top: 2px;
       font-style: italic;
+    }
+
+    .entry-normal {
+      background: radial-gradient(circle at top left, rgba(48,209,88,0.25), transparent 60%);
+    }
+
+    .entry-elevated {
+      background: radial-gradient(circle at top left, rgba(255,214,10,0.25), transparent 60%);
+    }
+
+    .entry-high {
+      background: radial-gradient(circle at top left, rgba(255,69,58,0.3), transparent 60%);
+    }
+
+    .entry-unknown {
+      background-color: var(--card-alt);
     }
 
     .timestamp {
@@ -316,6 +346,77 @@
       font-size: 13px;
       color: var(--text-muted);
       padding: 4px 0 2px;
+    }
+
+    .stats-grid {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .stat-pill {
+      flex: 1;
+      background-color: var(--card-alt);
+      border-radius: 12px;
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+
+    .stat-value {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .chart-wrapper {
+      margin-top: 4px;
+      background-color: var(--card-alt);
+      border-radius: 14px;
+      padding: 6px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 150px;
+      display: block;
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+    }
+
+    .dot-sys {
+      background-color: #ff453a;
+    }
+
+    .dot-dia {
+      background-color: #0a84ff;
+    }
+
+    .dot-pulse {
+      background-color: #30d158;
     }
 
     @media (max-width: 400px) {
@@ -425,6 +526,25 @@
       </div>
     </div>
 
+    <!-- Stats & Chart Card -->
+    <div class="card">
+      <div class="section-header">
+        <h2>Last 7 days</h2>
+        <small id="statsLabel">No data</small>
+      </div>
+      <div id="statsContent" class="empty-state">
+        Add readings to see averages and trends.
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="bpChart"></canvas>
+        <div class="chart-legend">
+          <div class="legend-item"><span class="legend-dot dot-sys"></span> Sys</div>
+          <div class="legend-item"><span class="legend-dot dot-dia"></span> Dia</div>
+          <div class="legend-item"><span class="legend-dot dot-pulse"></span> Pulse</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Recent Entries Card -->
     <div class="card">
       <div class="section-header">
@@ -435,16 +555,16 @@
       <div class="empty-state" id="emptyState">No readings yet. Your future self is waiting 📈</div>
     </div>
 
-    <!-- Export Card -->
+    <!-- Export & Backup Card -->
     <div class="card">
       <div class="section-header">
-        <h2>Export CSV</h2>
-        <small>For AI or spreadsheets</small>
+        <h2>Export / backup</h2>
+        <small>CSV for AI • JSON backup</small>
       </div>
 
       <div class="export-row">
         <div>
-          <label>Optional date range</label>
+          <label>CSV date range (optional)</label>
           <div class="field-row">
             <input type="date" id="fromDate" />
             <input type="date" id="toDate" />
@@ -457,16 +577,26 @@
           </button>
         </div>
 
+        <div class="btn-row">
+          <button class="btn-secondary" type="button" id="backupBtn">
+            🗂 Backup data
+          </button>
+          <button class="btn-secondary" type="button" id="restoreBtn">
+            ⬆ Restore data
+          </button>
+          <input type="file" id="restoreInput" accept="application/json" style="display:none" />
+        </div>
+
         <div class="footnote">
-          CSV will be downloaded on your device.  
-          You can share it with your AI tool, email it, or open it in Excel/Sheets.
+          CSV: great for AI / spreadsheets.<br/>
+          Backup: saves all data as JSON; restore replaces your current readings.
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = "bpReadings_v1";
+    const STORAGE_KEY = "bpReadings_v2";
 
     function loadReadings() {
       try {
@@ -494,17 +624,26 @@
     }
 
     function classifyBP(sys, dia) {
-      if (!sys || !dia) return { label: "Incomplete", class: "chip-info" };
+      if (!sys || !dia) return { label: "Incomplete", class: "chip-info", key: "unknown" };
       if (sys < 120 && dia < 80) {
-        return { label: "Normal", class: "chip-ok" };
+        return { label: "Normal", class: "chip-ok", key: "normal" };
       } else if (sys < 130 && dia < 80) {
-        return { label: "Elevated", class: "chip-info" };
+        return { label: "Elevated", class: "chip-warning", key: "elevated" };
       } else if (sys < 140 || (dia >= 80 && dia < 90)) {
-        return { label: "High (Stage 1)", class: "chip-high" };
+        return { label: "High (Stage 1)", class: "chip-high", key: "high" };
       } else if (sys >= 140 || dia >= 90) {
-        return { label: "High (Stage 2)", class: "chip-high" };
+        return { label: "High (Stage 2)", class: "chip-high", key: "high" };
       } else {
-        return { label: "Check", class: "chip-info" };
+        return { label: "Check", class: "chip-info", key: "unknown" };
+      }
+    }
+
+    function entryBackgroundClass(categoryKey) {
+      switch (categoryKey) {
+        case "normal": return "entry-normal";
+        case "elevated": return "entry-elevated";
+        case "high": return "entry-high";
+        default: return "entry-unknown";
       }
     }
 
@@ -519,8 +658,180 @@
       chip.innerHTML = "";
       const span = document.createElement("span");
       span.className = "chip " + labelObj.class;
-      span.textContent = `Last: ${latest.sys}/${latest.dia} (${labelObj.label})`;
+      const tod = latest.timeOfDay || "";
+      span.textContent = `Last: ${latest.sys}/${latest.dia} (${labelObj.label}${tod ? " · " + tod : ""})`;
       chip.appendChild(span);
+    }
+
+    function computeSevenDayStats(readings) {
+      if (!readings.length) return null;
+      const now = new Date();
+      const cutoff = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+
+      const filtered = readings.filter(r => {
+        const t = new Date(r.timestamp).getTime();
+        return !isNaN(t) && t >= cutoff;
+      });
+
+      if (!filtered.length) return null;
+
+      let sumSys = 0, sumDia = 0, sumPulse = 0, countPulse = 0;
+      filtered.forEach(r => {
+        if (r.sys) sumSys += r.sys;
+        if (r.dia) sumDia += r.dia;
+        if (r.pulse != null) {
+          sumPulse += r.pulse;
+          countPulse++;
+        }
+      });
+
+      return {
+        count: filtered.length,
+        avgSys: Math.round(sumSys / filtered.length),
+        avgDia: Math.round(sumDia / filtered.length),
+        avgPulse: countPulse ? Math.round(sumPulse / countPulse) : null
+      };
+    }
+
+    function updateStats(readings) {
+      const statsContent = document.getElementById("statsContent");
+      const statsLabel = document.getElementById("statsLabel");
+      const stats = computeSevenDayStats(readings);
+
+      if (!readings.length) {
+        statsLabel.textContent = "No data";
+        statsContent.className = "empty-state";
+        statsContent.textContent = "Add readings to see averages and trends.";
+        drawChart([]);
+        return;
+      }
+
+      if (!stats) {
+        statsLabel.textContent = "No data in last 7 days";
+        statsContent.className = "empty-state";
+        statsContent.textContent = "Add readings in the last week to see stats.";
+        drawChart(readings);
+        return;
+      }
+
+      statsLabel.textContent = `${stats.count} reading${stats.count === 1 ? "" : "s"} in last 7 days`;
+
+      statsContent.className = "";
+      statsContent.innerHTML = `
+        <div class="stats-grid">
+          <div class="stat-pill">
+            <div class="stat-label">Avg BP</div>
+            <div class="stat-value">${stats.avgSys}/${stats.avgDia}</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-label">Avg Pulse</div>
+            <div class="stat-value">${stats.avgPulse ?? "–"} bpm</div>
+          </div>
+        </div>
+      `;
+
+      drawChart(readings);
+    }
+
+    function drawChart(readings) {
+      const canvas = document.getElementById("bpChart");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+
+      // Resize canvas to container width
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = 150;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const points = readings
+        .map((r, idx) => {
+          const t = new Date(r.timestamp).getTime();
+          if (isNaN(t) || !r.sys || !r.dia) return null;
+          return {
+            idx,
+            t,
+            sys: r.sys,
+            dia: r.dia,
+            pulse: r.pulse ?? null
+          };
+        })
+        .filter(Boolean)
+        .slice(-30); // last 30 valid readings
+
+      if (points.length < 2) {
+        ctx.fillStyle = "#a1a1a6";
+        ctx.font = "12px system-ui";
+        ctx.fillText("Need at least 2 readings for trend", 8, canvas.height / 2);
+        return;
+      }
+
+      let minVal = Infinity, maxVal = -Infinity;
+      points.forEach(p => {
+        minVal = Math.min(minVal, p.dia, p.sys, p.pulse ?? p.dia);
+        maxVal = Math.max(maxVal, p.dia, p.sys, p.pulse ?? p.sys);
+      });
+
+      // Add some padding
+      const padding = 10;
+      minVal = Math.max(40, Math.floor(minVal - 10));
+      maxVal = Math.ceil(maxVal + 10);
+
+      const w = canvas.width;
+      const h = canvas.height;
+      const leftPad = 30;
+      const rightPad = 10;
+      const topPad = 10;
+      const bottomPad = 16;
+
+      const innerW = w - leftPad - rightPad;
+      const innerH = h - topPad - bottomPad;
+
+      function xForIndex(i) {
+        if (points.length === 1) return leftPad + innerW / 2;
+        return leftPad + (i / (points.length - 1)) * innerW;
+      }
+
+      function yForValue(v) {
+        const ratio = (v - minVal) / (maxVal - minVal || 1);
+        return topPad + innerH - ratio * innerH;
+      }
+
+      // Axes
+      ctx.strokeStyle = "#444";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(leftPad, topPad);
+      ctx.lineTo(leftPad, h - bottomPad);
+      ctx.lineTo(w - rightPad, h - bottomPad);
+      ctx.stroke();
+
+      // Min / max labels
+      ctx.fillStyle = "#a1a1a6";
+      ctx.font = "10px system-ui";
+      ctx.fillText(maxVal.toString(), 2, yForValue(maxVal) + 3);
+      ctx.fillText(minVal.toString(), 2, yForValue(minVal) + 3);
+
+      function drawLine(getVal, color) {
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = color;
+        points.forEach((p, idx) => {
+          const v = getVal(p);
+          if (v == null) return;
+          const x = xForIndex(idx);
+          const y = yForValue(v);
+          if (idx === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+
+      // Sys, Dia, Pulse lines
+      drawLine(p => p.sys, "#ff453a");
+      drawLine(p => p.dia, "#0a84ff");
+      drawLine(p => p.pulse, "#30d158");
     }
 
     function renderReadings(readings) {
@@ -541,7 +852,8 @@
 
       recent.forEach(r => {
         const li = document.createElement("li");
-        li.className = "entry";
+        const bpClass = classifyBP(r.sys, r.dia);
+        li.className = "entry " + entryBackgroundClass(bpClass.key);
 
         const main = document.createElement("div");
         main.className = "entry-main";
@@ -550,10 +862,9 @@
         left.textContent = `${r.sys}/${r.dia} · ${r.pulse || "–"} bpm`;
 
         const right = document.createElement("div");
-        const cls = classifyBP(r.sys, r.dia);
         const chip = document.createElement("span");
-        chip.className = "chip " + cls.class;
-        chip.textContent = cls.label;
+        chip.className = "chip " + bpClass.class;
+        chip.textContent = bpClass.label;
         right.appendChild(chip);
 
         main.appendChild(left);
@@ -563,6 +874,8 @@
         sub.className = "entry-sub";
         const parts = [];
         parts.push(formatDateTime(r.timestamp));
+        const tod = r.timeOfDay || "";
+        if (tod) parts.push(tod + " reading");
         parts.push(r.fasting ? "Fasting" : "Not fasting");
         parts.push((r.sleepHours || 0) + "h " + (r.sleepMinutes || 0) + "m sleep");
         parts.push((r.arm || "arm").charAt(0).toUpperCase() + (r.arm || "arm").slice(1) + " arm");
@@ -602,6 +915,17 @@
       const meds = document.getElementById("meds").checked;
       const notes = document.getElementById("notes").value.trim();
 
+      let timeOfDay = "";
+      if (timestamp) {
+        const d = new Date(timestamp);
+        if (!isNaN(d.getTime())) {
+          const hour = d.getHours();
+          timeOfDay = hour < 12 ? "AM" : "PM";
+        }
+      }
+
+      const bpClass = classifyBP(sys, dia);
+
       return {
         timestamp,
         sys,
@@ -614,7 +938,10 @@
         weight: weight === "" ? null : weight,
         fasting,
         meds,
-        notes
+        notes,
+        timeOfDay,
+        category: bpClass.label,
+        categoryKey: bpClass.key
       };
     }
 
@@ -650,9 +977,11 @@
     function readingsToCSV(readings) {
       const header = [
         "timestamp",
+        "time_of_day",
         "systolic",
         "diastolic",
         "pulse",
+        "bp_category",
         "fasting",
         "sleep_hours",
         "sleep_minutes",
@@ -666,9 +995,11 @@
       const rows = readings.map(r => {
         const values = [
           r.timestamp,
+          r.timeOfDay || "",
           r.sys,
           r.dia,
           r.pulse ?? "",
+          r.category || "",
           r.fasting ? "yes" : "no",
           r.sleepHours ?? "",
           r.sleepMinutes ?? "",
@@ -678,7 +1009,6 @@
           r.weight ?? "",
           (r.notes || "").replace(/"/g, '""')
         ];
-        // wrap notes in quotes to preserve commas
         values[values.length - 1] = `"${values[values.length - 1]}"`;
         return values.join(",");
       });
@@ -686,8 +1016,8 @@
       return header.join(",") + "\n" + rows.join("\n");
     }
 
-    function downloadCSV(filename, csvText) {
-      const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+    function downloadFile(filename, text, mimeType) {
+      const blob = new Blob([text], { type: mimeType || "text/plain;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -725,6 +1055,7 @@
       const readings = loadReadings();
       renderReadings(readings);
       updateSummaryChip(readings);
+      updateStats(readings);
 
       document.getElementById("saveBtn").addEventListener("click", () => {
         const r = getFormData();
@@ -735,6 +1066,7 @@
         saveReadings(all);
         renderReadings(all);
         updateSummaryChip(all);
+        updateStats(all);
         clearForm();
       });
 
@@ -758,10 +1090,55 @@
 
         const csv = readingsToCSV(filtered);
         const filename = `bp_readings_${from || "start"}_${to || "end"}.csv`;
-        downloadCSV(filename, csv);
+        downloadFile(filename, csv, "text/csv;charset=utf-8;");
+      });
+
+      document.getElementById("backupBtn").addEventListener("click", () => {
+        const all = loadReadings();
+        if (!all.length) {
+          alert("No readings to backup yet.");
+          return;
+        }
+        const json = JSON.stringify(all, null, 2);
+        const filename = `bp_backup_${new Date().toISOString().slice(0,10)}.json`;
+        downloadFile(filename, json, "application/json;charset=utf-8;");
+      });
+
+      const restoreInput = document.getElementById("restoreInput");
+      document.getElementById("restoreBtn").addEventListener("click", () => {
+        restoreInput.value = "";
+        restoreInput.click();
+      });
+
+      restoreInput.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (!Array.isArray(data)) {
+              alert("Invalid backup format.");
+              return;
+            }
+            if (!confirm("Restore this backup and replace existing readings?")) {
+              return;
+            }
+            saveReadings(data);
+            const all = loadReadings();
+            renderReadings(all);
+            updateSummaryChip(all);
+            updateStats(all);
+            alert("Backup restored.");
+          } catch (err) {
+            console.error(err);
+            alert("Failed to restore backup.");
+          }
+        };
+        reader.readAsText(file);
       });
     });
   </script>
 </body>
 </html>
-
